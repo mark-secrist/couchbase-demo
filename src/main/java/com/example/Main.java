@@ -1,15 +1,10 @@
 package com.example;
 
 import java.time.Duration;
+import java.util.List;
 
-import com.couchbase.client.core.error.DocumentNotFoundException;
-import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.ClusterOptions;
-import com.couchbase.client.java.Collection;
-import com.couchbase.client.java.Scope;
-import com.couchbase.client.java.json.JsonObject;
-import com.couchbase.client.java.query.QueryResult;
+
 
 public class Main {
     static String connectionString = "cb.rfxt9efmqrycj5-q.cloud.couchbase.com";
@@ -20,59 +15,31 @@ public class Main {
 
     public static void main(String[] args) {
 
+        CouchbaseRepository repo = new CouchbaseRepository(connectionString, username, password, bucketName);
+
         // Connect to the cluster
-        Cluster cluster = connect();
+       boolean connected = repo.connect();
 
-        // Get an entry and print it
-        getEntry(cluster, key);
+       if (connected) {
+           // Get an entry and print it
+           String entry = repo.getEntryAsString(key);
+           System.out.println( entry);
+           //Playlist entry = repo.getEntryAsObject(key);
+           //System.out.println( entry.getName());
 
-        doQuery(cluster);
+           List<Playlist> queryResults = repo.doQuery();
+           System.out.println("Found " + queryResults.size() + " items");
+           queryResults.forEach((item) -> {
+               System.out.println(item.getName());
+           });
 
-        // Close cluster
-        cluster.close();
+           // Close cluster
+           repo.close();
 
-    }
-
-    public static Cluster connect() {
-        ClusterOptions clusterOptions = ClusterOptions.clusterOptions(username, password).environment(env -> {
-            // Sets a pre-configured profile called "wan-development" to help avoid latency issues
-            // when accessing Capella from a different Wide Area Network
-            // or Availability Zone (e.g. your laptop).
-            env.applyProfile("wan-development");
-        });
-
-        return Cluster.connect(
-                "couchbases://" + connectionString,
-                clusterOptions
-        );
-    }
-
-    public static void getEntry(Cluster cluster, String key ) {
-        // Get a bucket, scope and collection reference
-        Bucket bucket = cluster.bucket(bucketName);
-        bucket.waitUntilReady(Duration.ofSeconds(10));
-        Scope scope = bucket.scope("couchify");
-        Collection playlistCollection = scope.collection("playlist");
-
-        // Fetch a playlist document
-        try {
-            var result = playlistCollection.get(key);
-            System.out.println( result.contentAsObject().getString("name"));
-        } catch (DocumentNotFoundException ex) {
-            System.out.println("Failed to find document for key: " + key);
-        }
+       } else {
+           System.out.println("Not connected to the database");
+       }
 
     }
 
-    public static void doQuery(Cluster cluster) {
-        // Get a bucket and scope reference
-        Bucket bucket = cluster.bucket(bucketName);
-        bucket.waitUntilReady(Duration.ofSeconds(10));
-        Scope scope = bucket.scope("couchify");
-
-        // Do the query
-        String query = "SELECT * from playlist where owner.firstName='Morgan' limit 5 ";
-        QueryResult result = scope.query(query);
-        System.out.println(result.rowsAsObject());
-    }
 }

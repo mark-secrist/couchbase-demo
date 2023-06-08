@@ -37,6 +37,7 @@
             <artifactId>java-client</artifactId>
             <version>3.4.6</version>
         </dependency>
+
     </dependencies>
 
 </project>
