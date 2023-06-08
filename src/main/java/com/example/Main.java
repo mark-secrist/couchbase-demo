@@ -1,9 +1,6 @@
 package com.example;
 
-import java.time.Duration;
 import java.util.List;
-
-import com.couchbase.client.java.Cluster;
 
 
 public class Main {
@@ -27,9 +24,9 @@ public class Main {
            //Playlist entry = repo.getEntryAsObject(key);
            //System.out.println( entry.getName());
 
-           List<Playlist> queryResults = repo.doQuery();
+           List<Playlist> queryResults = repo.findByFirstName("Morgan");
            System.out.println("Found " + queryResults.size() + " items");
-           queryResults.forEach((item) -> {
+           queryResults.forEach(item -> {
                System.out.println(item.getName());
            });
 

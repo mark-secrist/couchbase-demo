@@ -81,7 +81,7 @@ public class CouchbaseTests {
     public void validateQuery() {
         CouchbaseRepository repo = new CouchbaseRepository(connectionString, username, password, bucketName);
         repo.connect();
-        List<Playlist> playlists = repo.doQuery();
+        List<Playlist> playlists = repo.findByFirstName("Morgan");
         assertNotNull(playlists, "Playlists results should not be null");
         assertEquals(5, playlists.size(), "Expected exactly one playlist to be returned");
 
