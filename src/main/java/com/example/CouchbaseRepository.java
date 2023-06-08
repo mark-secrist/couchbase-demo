@@ -4,6 +4,7 @@ import com.couchbase.client.core.error.CouchbaseException;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.*;
 import com.couchbase.client.java.json.JsonObject;
+import com.couchbase.client.java.query.QueryOptions;
 import com.couchbase.client.java.query.QueryResult;
 
 import java.time.Duration;
@@ -97,16 +98,25 @@ public class CouchbaseRepository {
         return entry;
     }
 
-    public List<Playlist> doQuery() {
+    public List<Playlist> findByFirstName(String firstName) {
+        //String firstName = "Morgan";
+        List<Playlist> results = null;
+
         // Get a bucket and scope reference
         Bucket bucket = cluster.bucket(bucketName);
         bucket.waitUntilReady(Duration.ofSeconds(10));
         Scope scope = bucket.scope("couchify");
 
         // Do the query
-        String query = "SELECT playlist.* from playlist where owner.firstName='Morgan' limit 5 ";
-        QueryResult result = scope.query(query);
-        return result.rowsAs(Playlist.class);
+        String query = "SELECT playlist.* from playlist where owner.firstName=$firstName limit 5 ";
+        QueryOptions options = QueryOptions.queryOptions().parameters(JsonObject.create().put("firstName",firstName));
+        try {
+            QueryResult result = scope.query(query, options);
+            results = result.rowsAs(Playlist.class);
+        } catch (CouchbaseException ex) {
+            System.out.println("Error while querying: " + ex);
+        }
+        return results;
     }
 
     public boolean close() {
